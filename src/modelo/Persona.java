@@ -60,7 +60,7 @@ public abstract class Persona {
     //Método concreto que pueden utilizar las clases hijas
 
      public String getInformacionBasica() {
-        return "Nombre: " + nombre + ", Cédula: " + cedula + ", Edad: " + edad;
+        return "Nombre: " + nombre + "Apellido: " + apellido + ", Cédula: " + cedula + ", Edad: " + edad;
     }
     
 }
