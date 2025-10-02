@@ -14,7 +14,7 @@ public class Libro extends Material{
     private int numeroPaginas;
     private String editorial;
     
-    // Constructor -usas super() para llmar al constructor de clase padre
+    // Constructor -usa super() para llamar al constructor de clase padre
     public Libro(int id, String titulo, String autor, int anioPublicacion, 
             String isbn, int numeroPaginas, String editorial ){
             super(id, titulo, autor, anioPublicacion);

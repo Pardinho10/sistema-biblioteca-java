@@ -67,7 +67,7 @@ public class Prestamo {
    @Override
    public String toString(){
        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-       String estado = activo ? "ACTIVO": "FINALIADO";
+       String estado = activo ? "ACTIVO": "FINALIZADO";
        String devolucion = fechaDevolucion != null ? fechaDevolucion.format(formato) : 
                "Pendiente";
        
