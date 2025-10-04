@@ -9,6 +9,7 @@ import excepciones.*;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
+import javax.sound.midi.SysexMessage;
 
 /**
  * Clase MenuConsola - Maneja toda la interacción con el usuario por consola.
@@ -111,9 +112,9 @@ public class MenuConsola {
             } catch (Exception e) {
                 System.out.println("❌ Error inesperado: " + e.getMessage());
             }
-            // Cerrar el scanner al finalizar
-            scanner.close();
         }
+        // Cerrar el scanner al finalizar
+        scanner.close();
     }
 
     // ========== MENÚ MATERIALES ==========
@@ -243,12 +244,10 @@ public class MenuConsola {
                 break;
             case 2:
                 listarUsuarios();
-            default:
-                throw new AssertionError();
         }
     }
 
-    private void registrarUsuarios() {
+    private void registrarUsuario() {
         try {
             System.out.println("\n--- REGISTRAR USUARIO ---");
             System.out.print("Nombre completo: ");
@@ -316,7 +315,7 @@ public class MenuConsola {
         }
     }
 
-    private void resgistrarBibliotecario() {
+    private void registrarBibliotecario() {
         try {
             System.out.println("\n--- REGISTRAR BIBLIOTECARIO ---");
             System.out.print("Nombre completo: ");
@@ -351,11 +350,11 @@ public class MenuConsola {
             System.out.println("👨‍💼 No hay bibliotecarios registrados.");
             return;
         }
-        
+
         System.out.println("\n" + "=".repeat(80));
         System.out.println("                       LISTA DE BIBLIOTECARIOS");
         System.out.println("=".repeat(80));
-        
+
         for (Bibliotecario b : bibliotecarios) {
             System.out.println(b);
             if (b.tieneMasDe5Anios()) {
@@ -364,9 +363,8 @@ public class MenuConsola {
         }
         System.out.println("=".repeat(80));
     }
-    
+
     // ========== MENÚ PRÉSTAMOS ==========
-    
     private void menuPrestamos() {
         System.out.println("\n--- GESTIÓN DE PRÉSTAMOS ---");
         System.out.println("1. Realizar Préstamo");
@@ -374,8 +372,124 @@ public class MenuConsola {
         System.out.println("3. Listar Préstamos Activos");
         System.out.println("4. Listar Todos los Préstamos");
         System.out.println("0. Volver");
-        
-        
+
+        int opcion = leerEnteroSeguro("Opcion: ");
+
+        switch (opcion) {
+            case 1:
+                realizarPrestamo();
+                break;
+            case 2:
+                devolverMaterial();
+                break;
+            case 3:
+                listarPrestamosActivos();
+                break;
+            case 4:
+                listarTodosPrestamos();
+                break;
+            default:
+                throw new AssertionError();
+        }
+    }
+
+    private void realizarPrestamo() {
+        try {
+            System.out.println("\n--- REALIZAR PRÉSTAMO ---");
+
+            int idUsuario = leerEnteroSeguro("ID del Usuario");
+            int idMaterial = leerEnteroSeguro("ID del Material");
+
+            // Este método puede lanzar excepciones personalizadas
+            int idPrestamo = servicio.realizarPrestamo(idUsuario, idMaterial);
+
+            System.out.println("✅ Préstamo realizado exitosamente. ID de préstamo: " + idPrestamo);
+        } catch (UsuarioNoEncontradoException e) {
+            // Excepción personalizada  - Usuario no existe
+            System.out.println("❌ " + e.getMessage());
+        } catch (MaterialNoDisponibleException e) {
+            // Excepción personalizada - Material ya prestado
+            System.out.println("❌ " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // Preguntar a Claude
+            System.out.println("❌ " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("❌ Error inesperado: " + e.getMessage());
+        }
+    }
+
+    private void devolverMaterial() {
+        try {
+            System.out.println("\n--- DEVOLVER MATERIAL ---");
+
+            // Primero mostramos los prestamos activos
+            List<Prestamo> activos = servicio.obtenerPrestamosActivos();
+
+            if (activos.isEmpty()) {
+                System.out.println("📚 No hay préstamos activos en este momento.");
+                return;
+            }
+
+            System.out.println("\n Préstamos activos: ");
+            for (Prestamo act : activos) {
+                System.out.println(act);
+            }
+
+            int idPrestamo = leerEnteroSeguro("\nID del Préstamo a devolver: ");
+
+            servicio.devolverMaterial(idPrestamo);
+            System.out.println("✅ Material devuelto exitosamente.");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("❌ " + e.getMessage());
+        }
+    }
+
+    private void listarPrestamosActivos() {
+        List<Prestamo> activos = servicio.obtenerPrestamosActivos();
+
+        if (activos.isEmpty()) {
+            System.out.println("📚 No hay préstamos activos. ");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(100));
+        System.out.println("                              PRÉSTAMOS ACTIVOS");
+        System.out.println("=".repeat(100));
+
+        for (Prestamo act : activos) {
+            System.out.println(act);
+        }
+
+        System.out.println("=".repeat(100));
+        System.out.println("Total préstamos activos: " + activos.size());
+    }
+
+    private void listarTodosPrestamos() {
+        List<Prestamo> todos = servicio.obtenerTodosPrestamos();
+
+        if (todos.isEmpty()) {
+            System.out.println("📚 No hay préstamos registrados.");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(100));
+        System.out.println("                           HISTORIAL DE PRÉSTAMOS");
+        System.out.println("=".repeat(100));
+
+        for (Prestamo too : todos) {
+            System.out.println(too);
+        }
+
+        System.out.println("=".repeat(100));
+        System.out.println("Total préstamos: " + todos.size());
+    }
+
+// ========== ESTADÍSTICAS ==========
+    private void mostrarEstadisticas() {
+        System.out.println("\n" + servicio.obtenerEstadisticas());
     }
 
 // ========== MÉTODOS AUXILIARES ==========
@@ -400,6 +514,43 @@ public class MenuConsola {
             }
         }
         return numero;
+    }
+
+    /**
+     * Carga datos de ejemplo para que el sistema tenga información inicial.
+     * Esto facilita la demostración sin tener que cargar todo manualmente.
+     */
+    private void cargarDatosEjemplo() {
+        try {
+            // Registrar algunos libros
+            servicio.registrarLibro("Cien Años de Soledad", "Gabriel García Márquez",
+                    1967, "978-0307474728", 417, "Sudamericana");
+            servicio.registrarLibro("1984", "George Orwell",
+                    1949, "978-0451524935", 328, "Secker & Warburg");
+            servicio.registrarLibro("El Principito", "Antoine de Saint-Exupéry",
+                    1943, "978-0156012195", 96, "Reynal & Hitchcock");
+
+            // Registrar algunas revistas
+            servicio.registrarRevista("National Geographic", "National Geographic Society",
+                    2024, 245, "Enero", "CIENCIA");
+            servicio.registrarRevista("Scientific American", "Varios",
+                    2024, 330, "Marzo", "TECNOLOGIA");
+
+            // Registrar usuarios
+            servicio.registrarUsuario("Juan", "Pérez", "12345678", "555-1234", "juan@email.com");
+            servicio.registrarUsuario("María", "González", "87654321", "555-5678", "maria@email.com");
+            servicio.registrarUsuario("Carlos", "Rodríguez", "11223344", "555-9012", "carlos@email.com");
+
+            // Registrar bibliotecarios
+            servicio.registrarBibliotecario("Ana", "López", "99887766", "555-1111", "MAÑANA", 3);
+            servicio.registrarBibliotecario("Pedro", "Martínez", "55443322", "555-2222", "TARDE", 7);
+
+            // Realizar algunos préstamos de ejemplo
+            servicio.realizarPrestamo(1, 1); // Juan presta "Cien Años de Soledad"
+            servicio.realizarPrestamo(2, 4); // María presta "National Geographic"
+        } catch (Exception e) {
+            System.out.println("Error al cargar los datos de ejemplo: " + e.getMessage());
+        }
     }
 
 }
